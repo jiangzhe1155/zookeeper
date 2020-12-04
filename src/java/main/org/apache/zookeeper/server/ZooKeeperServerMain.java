@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,7 @@ public class ZooKeeperServerMain {
 
     private static final Logger LOG = Logger.getLogger(ZooKeeperServerMain.class);
     private static final String USAGE = "Usage: ZooKeeperServerMain port datadir";
+
     /*
      * Start up the ZooKeeper server.
      *
@@ -40,26 +41,28 @@ public class ZooKeeperServerMain {
     public static void main(String[] args) {
         try {
             ServerConfig.parse(args);
-        } catch(Exception e) {
+        } catch (Exception e) {
             LOG.fatal("Error in config", e);
             LOG.info(USAGE);
             System.exit(2);
         }
         runStandalone(new ZooKeeperServer.Factory() {
+            @Override
             public NIOServerCnxn.Factory createConnectionFactory() throws IOException {
                 return new NIOServerCnxn.Factory(ServerConfig.getClientPort());
             }
 
+            @Override
             public ZooKeeperServer createServer() throws IOException {
                 // create a file logger url from the command line args
                 ZooKeeperServer zks = new ZooKeeperServer();
                 zks.setClientPort(ServerConfig.getClientPort());
 
-               FileTxnSnapLog ftxn = new FileTxnSnapLog(new 
-                       File(ServerConfig.getDataLogDir()),
+                FileTxnSnapLog ftxn = new FileTxnSnapLog(new
+                        File(ServerConfig.getDataLogDir()),
                         new File(ServerConfig.getDataDir()));
-               zks.setTxnLogFactory(ftxn);
-               return zks;
+                zks.setTxnLogFactory(ftxn);
+                return zks;
             }
         });
     }
@@ -79,7 +82,7 @@ public class ZooKeeperServerMain {
                 zk.shutdown();
             }
         } catch (Exception e) {
-            LOG.fatal("Unexpected exception",e);
+            LOG.fatal("Unexpected exception", e);
         }
         System.exit(0);
     }

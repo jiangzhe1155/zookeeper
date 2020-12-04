@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,45 +20,51 @@ package org.apache.zookeeper.server;
 
 
 public class ServerStats {
-    private static ServerStats instance=null;
+    private static ServerStats instance = null;
     private long packetsSent;
     private long packetsReceived;
     private long maxLatency;
     private long minLatency = Long.MAX_VALUE;
     private long totalLatency = 0;
     private long count = 0;
-    
-    public interface Provider{
+
+    public interface Provider {
         public long getOutstandingRequests();
+
         public long getLastProcessedZxid();
     }
-    private Provider provider=null;
-    private Object mutex=new Object();
-    
-    static public ServerStats getInstance(){
+
+    private Provider provider = null;
+    private Object mutex = new Object();
+
+    static public ServerStats getInstance() {
         return instance;
     }
+
     static public void registerAsConcrete() {
         setInstance(new ServerStats());
     }
+
     static synchronized public void unregister() {
-        instance=null;
+        instance = null;
     }
-    static synchronized protected void setInstance(ServerStats newInstance){
-        assert instance==null;
+
+    static synchronized protected void setInstance(ServerStats newInstance) {
+        assert instance == null;
         instance = newInstance;
     }
+
     protected ServerStats() {
         // protected constructor
     }
-    
+
     // getters
     synchronized public long getMinLatency() {
         return (minLatency == Long.MAX_VALUE) ? 0 : minLatency;
     }
 
     synchronized public long getAvgLatency() {
-        if(count!=0)
+        if (count != 0)
             return totalLatency / count;
         return 0;
     }
@@ -68,15 +74,17 @@ public class ServerStats {
     }
 
     public long getOutstandingRequests() {
-        synchronized(mutex){
-            return (provider!=null)?provider.getOutstandingRequests():-1;
+        synchronized (mutex) {
+            return (provider != null) ? provider.getOutstandingRequests() : -1;
         }
     }
-    public long getLastProcessedZxid(){
-        synchronized(mutex){
-            return (provider!=null)?provider.getLastProcessedZxid():-1;
+
+    public long getLastProcessedZxid() {
+        synchronized (mutex) {
+            return (provider != null) ? provider.getLastProcessedZxid() : -1;
         }
     }
+
     synchronized public long getPacketsReceived() {
         return packetsReceived;
     }
@@ -85,12 +93,12 @@ public class ServerStats {
         return packetsSent;
     }
 
-    public String getServerState(){
+    public String getServerState() {
         return "standalone";
     }
-    
+
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Latency min/avg/max: " + getMinLatency() + "/"
                 + getAvgLatency() + "/" + getMaxLatency() + "\n");
@@ -98,17 +106,19 @@ public class ServerStats {
         sb.append("Sent: " + getPacketsSent() + "\n");
         if (provider != null) {
             sb.append("Outstanding: " + getOutstandingRequests() + "\n");
-            sb.append("Zxid: 0x"+ Long.toHexString(getLastProcessedZxid())+ "\n");
+            sb.append("Zxid: 0x" + Long.toHexString(getLastProcessedZxid()) + "\n");
         }
-        sb.append("Mode: "+getServerState()+"\n");
+        sb.append("Mode: " + getServerState() + "\n");
         return sb.toString();
     }
+
     // mutators
-    public void setStatsProvider(Provider zk){
-        synchronized(mutex){
-            provider=zk;
+    public void setStatsProvider(Provider zk) {
+        synchronized (mutex) {
+            provider = zk;
         }
     }
+
     synchronized void updateLatency(long requestCreateTime) {
         long latency = System.currentTimeMillis() - requestCreateTime;
         totalLatency += latency;
@@ -120,21 +130,26 @@ public class ServerStats {
             maxLatency = latency;
         }
     }
-    synchronized public void resetLatency(){
-        totalLatency=count=maxLatency=0;
-        minLatency=Long.MAX_VALUE;
+
+    synchronized public void resetLatency() {
+        totalLatency = count = maxLatency = 0;
+        minLatency = Long.MAX_VALUE;
     }
-    synchronized public void resetMaxLatency(){
-        maxLatency=getMinLatency();
+
+    synchronized public void resetMaxLatency() {
+        maxLatency = getMinLatency();
     }
+
     synchronized public void incrementPacketsReceived() {
         packetsReceived++;
     }
+
     synchronized public void incrementPacketsSent() {
         packetsSent++;
     }
-    synchronized public void resetRequestCounters(){
-        packetsReceived=packetsSent=0;
+
+    synchronized public void resetRequestCounters() {
+        packetsReceived = packetsSent = 0;
     }
 
 }

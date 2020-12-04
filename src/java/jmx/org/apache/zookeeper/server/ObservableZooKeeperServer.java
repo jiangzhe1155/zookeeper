@@ -49,6 +49,7 @@ public class ObservableZooKeeperServer extends ZooKeeperServer{
         super.shutdown();
     }
 
+    @Override
     public void startup() throws IOException, InterruptedException {
         super.startup();
         notifier.notifyStarted();

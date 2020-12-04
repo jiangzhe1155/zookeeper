@@ -58,6 +58,7 @@ public interface ServerCnxn extends Watcher {
 
     public void finishSessionInit(boolean valid);
 
+    @Override
     public abstract void process(WatchedEvent event);
 
     public abstract long getSessionId();

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,11 +48,12 @@ public abstract class ClientBase extends TestCase {
 
     public static final int CONNECTION_TIMEOUT = 30000;
     static final File BASETEST =
-        new File(System.getProperty("build.test.dir", "build"));
+            new File(System.getProperty("build.test.dir", "build"));
 
     protected String hostPort = "127.0.0.1:33221";
     protected NIOServerCnxn.Factory serverFactory = null;
     protected File tmpDir = null;
+
     public ClientBase() {
         super();
     }
@@ -65,7 +66,6 @@ public abstract class ClientBase extends TestCase {
      * In general don't use this. Only use in the special case that you
      * want to ignore results (for whatever reason) in your test. Don't
      * use empty watchers in real code!
-     *
      */
     protected class NullWatcher implements Watcher {
         public void process(WatchedEvent event) { /* nada */ }
@@ -75,6 +75,7 @@ public abstract class ClientBase extends TestCase {
         // XXX this doesn't need to be volatile! (Should probably be final)
         volatile CountDownLatch clientConnected = new CountDownLatch(1);
         volatile boolean connected;
+
         synchronized public void process(WatchedEvent event) {
             if (event.getState() == KeeperState.SyncConnected) {
                 connected = true;
@@ -85,55 +86,54 @@ public abstract class ClientBase extends TestCase {
                 notifyAll();
             }
         }
+
         synchronized boolean isConnected() {
             return connected;
         }
+
         synchronized void waitForConnected(long timeout) throws InterruptedException, TimeoutException {
             long expire = System.currentTimeMillis() + timeout;
             long left = timeout;
-            while(!connected && left > 0) {
+            while (!connected && left > 0) {
                 wait(left);
                 left = expire - System.currentTimeMillis();
             }
             if (!connected) {
                 throw new TimeoutException("Did not connect");
-         
+
             }
         }
+
         synchronized void waitForDisconnected(long timeout) throws InterruptedException, TimeoutException {
             long expire = System.currentTimeMillis() + timeout;
             long left = timeout;
-            while(connected && left > 0) {
+            while (connected && left > 0) {
                 wait(left);
                 left = expire - System.currentTimeMillis();
             }
             if (connected) {
                 throw new TimeoutException("Did not disconnect");
-         
+
             }
         }
     }
-    
+
     protected ZooKeeper createClient()
-        throws IOException, InterruptedException
-    {
+            throws IOException, InterruptedException {
         return createClient(hostPort);
     }
 
     protected ZooKeeper createClient(String hp)
-        throws IOException, InterruptedException
-    {
+            throws IOException, InterruptedException {
         CountdownWatcher watcher = new CountdownWatcher();
         return createClient(watcher, hp);
     }
 
     protected TestableZooKeeper createClient(CountdownWatcher watcher, String hp)
-        throws IOException, InterruptedException
-    {
+            throws IOException, InterruptedException {
         TestableZooKeeper zk = new TestableZooKeeper(hp, 9000, watcher);
         if (!watcher.clientConnected.await(CONNECTION_TIMEOUT,
-                TimeUnit.MILLISECONDS))
-        {
+                TimeUnit.MILLISECONDS)) {
             fail("Unable to connect to server");
         }
         return zk;
@@ -154,8 +154,8 @@ public abstract class ClientBase extends TestCase {
                     outstream.flush();
 
                     reader =
-                        new BufferedReader(
-                                new InputStreamReader(sock.getInputStream()));
+                            new BufferedReader(
+                                    new InputStreamReader(sock.getInputStream()));
                     String line = reader.readLine();
                     if (line != null && line.startsWith("Zookeeper version:")) {
                         return true;
@@ -182,6 +182,7 @@ public abstract class ClientBase extends TestCase {
         }
         return false;
     }
+
     public static boolean waitForServerDown(String hp, long timeout) {
         long start = System.currentTimeMillis();
         String split[] = hp.split(":");
@@ -212,15 +213,14 @@ public abstract class ClientBase extends TestCase {
         }
         return false;
     }
-    
+
     static void verifyThreadTerminated(Thread thread, long millis)
-        throws InterruptedException
-    {
+            throws InterruptedException {
         thread.join(millis);
         if (thread.isAlive()) {
             LOG.error("Thread " + thread.getName() + " : "
                     + Arrays.toString(thread.getStackTrace()));
-            assertFalse("thread " + thread.getName() 
+            assertFalse("thread " + thread.getName()
                     + " still alive after join", true);
         }
     }
@@ -229,22 +229,22 @@ public abstract class ClientBase extends TestCase {
     public static File createTmpDir() throws IOException {
         return createTmpDir(BASETEST);
     }
+
     static File createTmpDir(File parentDir) throws IOException {
         File tmpFile = File.createTempFile("test", ".junit", parentDir);
         // don't delete tmpFile - this ensures we don't attempt to create
         // a tmpDir with a duplicate name
-        
+
         File tmpDir = new File(tmpFile + ".dir");
         assertFalse(tmpDir.exists()); // never true if tmpfile does it's job
         assertTrue(tmpDir.mkdirs());
-        
+        System.out.println("创建临时文件 " + tmpDir.getAbsoluteFile().getPath());
         return tmpDir;
     }
-    
+
     static NIOServerCnxn.Factory createNewServerInstance(File dataDir,
-            NIOServerCnxn.Factory factory, String hostPort)
-        throws IOException, InterruptedException 
-    {
+                                                         NIOServerCnxn.Factory factory, String hostPort)
+            throws IOException, InterruptedException {
         ZooKeeperServer zks = new ZooKeeperServer(dataDir, dataDir, 3000);
         final int PORT = Integer.parseInt(hostPort.split(":")[1]);
         if (factory == null) {
@@ -253,25 +253,24 @@ public abstract class ClientBase extends TestCase {
         factory.startup(zks);
 
         assertTrue("waiting for server up",
-                   ClientBase.waitForServerUp("127.0.0.1:" + PORT,
-                                              CONNECTION_TIMEOUT));
+                ClientBase.waitForServerUp("127.0.0.1:" + PORT,
+                        CONNECTION_TIMEOUT));
 
         return factory;
     }
-    
+
     static void shutdownServerInstance(NIOServerCnxn.Factory factory,
-            String hostPort)
-    {
+                                       String hostPort) {
         if (factory != null) {
             factory.shutdown();
             final int PORT = Integer.parseInt(hostPort.split(":")[1]);
 
             assertTrue("waiting for server down",
-                       ClientBase.waitForServerDown("127.0.0.1:" + PORT,
-                                                    CONNECTION_TIMEOUT));
+                    ClientBase.waitForServerDown("127.0.0.1:" + PORT,
+                            CONNECTION_TIMEOUT));
         }
     }
-    
+
     /**
      * Test specific setup
      */
@@ -283,7 +282,7 @@ public abstract class ClientBase extends TestCase {
         System.setProperty("zookeeper.preAllocSize", "100");
         FileTxnLog.setPreallocSize(100);
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         LOG.info("STARTING " + getName());
@@ -291,11 +290,11 @@ public abstract class ClientBase extends TestCase {
         ServerStats.registerAsConcrete();
 
         tmpDir = createTmpDir(BASETEST);
-        
+
         setupTestEnv();
         serverFactory =
-            createNewServerInstance(tmpDir, serverFactory, hostPort);
-        
+                createNewServerInstance(tmpDir, serverFactory, hostPort);
+
         LOG.info("Client test setup finished");
     }
 
@@ -304,18 +303,18 @@ public abstract class ClientBase extends TestCase {
         shutdownServerInstance(serverFactory, hostPort);
         serverFactory = null;
     }
-    
+
     protected void startServer() throws Exception {
         LOG.info("STARTING server");
         serverFactory = createNewServerInstance(tmpDir, serverFactory, hostPort);
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         LOG.info("tearDown starting");
 
         shutdownServerInstance(serverFactory, hostPort);
-        
+
         if (tmpDir != null) {
             //assertTrue("delete " + tmpDir.toString(), recursiveDelete(tmpDir));
             // FIXME see ZOOKEEPER-121 replace following line with previous
@@ -344,8 +343,7 @@ public abstract class ClientBase extends TestCase {
      * at the root
      */
     void verifyRootOfAllServersMatch(String hostPort)
-        throws InterruptedException, KeeperException, IOException
-    {
+            throws InterruptedException, KeeperException, IOException {
         String parts[] = hostPort.split(",");
 
         // run through till the counts no longer change on each server
@@ -376,7 +374,7 @@ public abstract class ClientBase extends TestCase {
 
         // verify all the servers reporting same number of nodes
         for (int i = 1; i < parts.length; i++) {
-            assertEquals("node count not consistent", counts[i-1], counts[i]);
+            assertEquals("node count not consistent", counts[i - 1], counts[i]);
         }
     }
 }

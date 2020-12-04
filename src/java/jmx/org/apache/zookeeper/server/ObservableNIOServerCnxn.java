@@ -67,6 +67,7 @@ public class ObservableNIOServerCnxn extends NIOServerCnxn implements Observable
         super(zk, sock, sk, factory);
     }
 
+    @Override
     public void close() {
         ObserverManager.getInstance().notifyObservers(this,ConnectionEvent.CLOSE);
         super.close();
@@ -77,6 +78,7 @@ public class ObservableNIOServerCnxn extends NIOServerCnxn implements Observable
         ev.dispatch(this, (ConnectionObserver)observer);
     }
 
+    @Override
     public void finishSessionInit(boolean valid) {
         super.finishSessionInit(valid);
         if(valid && !closed)

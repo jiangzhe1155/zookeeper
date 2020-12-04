@@ -48,6 +48,7 @@ public class ObservableLeaderZooKeeperServer extends LeaderZooKeeperServer {
         super.shutdown();
     }
 
+    @Override
     public void startup() throws IOException, InterruptedException {
         super.startup();
         notifier.notifyStarted();

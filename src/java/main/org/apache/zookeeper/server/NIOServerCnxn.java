@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,8 +62,10 @@ import org.apache.zookeeper.server.auth.ProviderRegistry;
  * This class handles communication with clients using NIO. There is one per
  * client, but only one thread doing the communication.
  */
+// 解决
 public class NIOServerCnxn implements Watcher, ServerCnxn {
     private static final Logger LOG = Logger.getLogger(NIOServerCnxn.class);
+
 
     static public class Factory extends Thread {
         ZooKeeperServer zks;
@@ -76,20 +78,20 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
          * We use this buffer to do efficient socket I/O. Since there is a single
          * sender thread per NIOServerCnxn instance, we can use a member variable to
          * only allocate it once.
-        */
+         */
         ByteBuffer directBuffer = ByteBuffer.allocateDirect(64 * 1024);
 
-        HashSet<NIOServerCnxn> cnxns = new HashSet<NIOServerCnxn>();
+        HashSet<NIOServerCnxn> cnxns = new HashSet<>();
 
         int outstandingLimit = 1;
 
         public Factory(int port) throws IOException {
             super("NIOServerCxn.Factory:" + port);
-            setDaemon(true);
+            setDaemon(true);//设置为守护进程 随着主进程结束自动销毁
             this.ss = ServerSocketChannel.open();
-            ss.socket().bind(new InetSocketAddress(port));
-            ss.configureBlocking(false);
-            ss.register(selector, SelectionKey.OP_ACCEPT);
+            ss.socket().bind(new InetSocketAddress(port)); //绑定到一个端口上
+            ss.configureBlocking(false);//非阻塞
+            ss.register(selector, SelectionKey.OP_ACCEPT);//注册感兴趣的事件
             start();
         }
 
@@ -112,12 +114,12 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
         public ZooKeeperServer getZooKeeperServer() {
             return this.zks;
         }
- 
-        public InetSocketAddress getLocalAddress(){
-            return (InetSocketAddress)ss.socket().getLocalSocketAddress();
+
+        public InetSocketAddress getLocalAddress() {
+            return (InetSocketAddress) ss.socket().getLocalSocketAddress();
         }
 
-        public int getLocalPort(){
+        public int getLocalPort() {
             return ss.socket().getLocalPort();
         }
 
@@ -128,28 +130,31 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
         }
 
         protected NIOServerCnxn createConnection(SocketChannel sock,
-                SelectionKey sk) throws IOException {
+                                                 SelectionKey sk) throws IOException {
             return new NIOServerCnxn(zks, sock, sk, this);
         }
 
+        @Override
         public void run() {
             while (!ss.socket().isClosed()) {
                 try {
                     selector.select(1000);
                     Set<SelectionKey> selected;
+                    System.out.println("Factory实例" + this.getName());
                     synchronized (this) {
+                        //为什么要加 synchronized
                         selected = selector.selectedKeys();
                     }
-                    ArrayList<SelectionKey> selectedList = new ArrayList<SelectionKey>(
-                            selected);
+                    //获取所有的准备接收事件
+                    ArrayList<SelectionKey> selectedList = new ArrayList<>(selected);
+                    //为什么要混乱呢。
                     Collections.shuffle(selectedList);
                     for (SelectionKey k : selectedList) {
                         if ((k.readyOps() & SelectionKey.OP_ACCEPT) != 0) {
                             SocketChannel sc = ((ServerSocketChannel) k
                                     .channel()).accept();
                             sc.configureBlocking(false);
-                            SelectionKey sk = sc.register(selector,
-                                    SelectionKey.OP_READ);
+                            SelectionKey sk = sc.register(selector, SelectionKey.OP_READ);
                             NIOServerCnxn cnxn = createConnection(sc, sk);
                             sk.attach(cnxn);
                             addCnxn(cnxn);
@@ -160,11 +165,11 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                     }
                     selected.clear();
                 } catch (Exception e) {
-                    LOG.error("FIXMSG",e);
+                    LOG.error("FIXMSG", e);
                 }
             }
             ZooTrace.logTraceMessage(LOG, ZooTrace.getTextTraceLevel(),
-                                     "NIOServerCnxn factory exitedloop.");
+                    "NIOServerCnxn factory exitedloop.");
             clear();
             LOG.error("=====> Goodbye cruel world <======");
             // System.exit(0);
@@ -172,14 +177,13 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
 
         /**
          * clear all the connections in the selector
-         *
          */
         synchronized public void clear() {
             selector.wakeup();
             synchronized (cnxns) {
                 // got to clear all the connections that we have in the selector
                 for (Iterator<NIOServerCnxn> it = cnxns.iterator(); it
-                        .hasNext();) {
+                        .hasNext(); ) {
                     NIOServerCnxn cnxn = it.next();
                     it.remove();
                     try {
@@ -199,7 +203,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                 this.interrupt();
                 this.join();
             } catch (InterruptedException e) {
-                LOG.warn("Interrupted",e);
+                LOG.warn("Interrupted", e);
             } catch (Exception e) {
                 LOG.error("Unexpected exception", e);
             }
@@ -212,7 +216,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
             selector.wakeup();
             synchronized (cnxns) {
                 for (Iterator<NIOServerCnxn> it = cnxns.iterator(); it
-                        .hasNext();) {
+                        .hasNext(); ) {
                     NIOServerCnxn cnxn = it.next();
                     if (cnxn.sessionId == sessionId) {
                         it.remove();
@@ -271,7 +275,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                     sk.interestOps(sk.interestOps() | SelectionKey.OP_WRITE);
                 }
             } catch (RuntimeException e) {
-                LOG.error("FIXMSG",e);
+                LOG.error("FIXMSG", e);
                 throw e;
             }
         }
@@ -394,7 +398,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                                 & (~SelectionKey.OP_WRITE));
                     } else {
                         sk.interestOps(sk.interestOps()
-                                        | SelectionKey.OP_WRITE);
+                                | SelectionKey.OP_WRITE);
                     }
                 }
             }
@@ -585,20 +589,20 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                 return;
             } else if (len == statCmd) {
                 StringBuffer sb = new StringBuffer();
-                if(zk!=null){
+                if (zk != null) {
                     sb.append("Zookeeper version: ").append(Version.getFullVersion())
-                        .append("\n");
+                            .append("\n");
                     sb.append("Clients:\n");
-                    synchronized(factory.cnxns){
-                        for(NIOServerCnxn c : factory.cnxns){
+                    synchronized (factory.cnxns) {
+                        for (NIOServerCnxn c : factory.cnxns) {
                             sb.append(c.getStats().toString());
                         }
                     }
                     sb.append("\n");
                     sb.append(ServerStats.getInstance().toString());
                     sb.append("Node count: ").append(zk.dataTree.getNodeCount()).
-                        append("\n");
-                }else
+                            append("\n");
+                } else
                     sb.append("ZooKeeperServer not running\n");
 
                 sendBuffer(ByteBuffer.wrap(sb.toString().getBytes()));
@@ -625,6 +629,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
      *
      * @see org.apache.zookeeper.server.ServerCnxnIface#getSessionTimeout()
      */
+    @Override
     public int getSessionTimeout() {
         return sessionTimeout;
     }
@@ -638,7 +643,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
     static long nextSessionId = 1;
 
     public NIOServerCnxn(ZooKeeperServer zk, SocketChannel sock,
-            SelectionKey sk, Factory factory) throws IOException {
+                         SelectionKey sk, Factory factory) throws IOException {
         this.zk = zk;
         this.sock = sock;
         this.sk = sk;
@@ -664,6 +669,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
      *
      * @see org.apache.zookeeper.server.ServerCnxnIface#close()
      */
+    @Override
     public void close() {
         if (closed) {
             return;
@@ -677,7 +683,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
         }
 
         ZooTrace.logTraceMessage(LOG, ZooTrace.SESSION_TRACE_MASK,
-                                 "close  NIOServerCnxn: " + sock);
+                "close  NIOServerCnxn: " + sock);
         try {
             /*
              * The following sequence of code is stupid! You would think that
@@ -727,6 +733,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
      * @see org.apache.zookeeper.server.ServerCnxnIface#sendResponse(org.apache.zookeeper.proto.ReplyHeader,
      *      org.apache.jute.Record, java.lang.String)
      */
+    @Override
     synchronized public void sendResponse(ReplyHeader h, Record r, String tag) {
         if (closed) {
             return;
@@ -769,16 +776,17 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
     synchronized public void process(WatchedEvent event) {
         ReplyHeader h = new ReplyHeader(-1, -1L, 0);
         ZooTrace.logTraceMessage(LOG, ZooTrace.EVENT_DELIVERY_TRACE_MASK,
-                                 "Deliver event " + event + " to 0x"
-                                 + Long.toHexString(this.sessionId) 
-                                 + " through " + this);
+                "Deliver event " + event + " to 0x"
+                        + Long.toHexString(this.sessionId)
+                        + " through " + this);
 
         // Convert WatchedEvent to a type that can be sent over the wire
         WatcherEvent e = event.getWrapper();
-        
+
         sendResponse(h, e, "notification");
     }
 
+    @Override
     public void finishSessionInit(boolean valid) {
         try {
             ConnectResponse rsp = new ConnectResponse(0, valid ? sessionTimeout
@@ -804,7 +812,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                 enableRecv();
             }
         } catch (Exception e) {
-            LOG.error("FIXMSG",e);
+            LOG.error("FIXMSG", e);
             close();
         }
     }
@@ -814,58 +822,67 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
      *
      * @see org.apache.zookeeper.server.ServerCnxnIface#getSessionId()
      */
+    @Override
     public long getSessionId() {
         return sessionId;
     }
 
+    @Override
     public void setSessionId(long sessionId) {
         this.sessionId = sessionId;
     }
 
+    @Override
     public ArrayList<Id> getAuthInfo() {
         return authInfo;
     }
 
+    @Override
     public InetSocketAddress getRemoteAddress() {
         return (InetSocketAddress) sock.socket().getRemoteSocketAddress();
     }
 
-    private class CnxnStats implements ServerCnxn.Stats{
+    private class CnxnStats implements ServerCnxn.Stats {
         long packetsReceived;
         long packetsSent;
 
         /**
          * The number of requests that have been submitted but not yet responded to.
          */
+        @Override
         public long getOutstandingRequests() {
             return outstandingRequests;
         }
 
+        @Override
         public long getPacketsReceived() {
             return packetsReceived;
         }
 
+        @Override
         public long getPacketsSent() {
             return packetsSent;
         }
 
         @Override
-        public String toString(){
-            StringBuilder sb=new StringBuilder();
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
             Channel channel = sk.channel();
             if (channel instanceof SocketChannel) {
-                sb.append(" ").append(((SocketChannel)channel).socket()
-                                .getRemoteSocketAddress())
-                  .append("[").append(Integer.toHexString(sk.interestOps()))
-                  .append("](queued=").append(getOutstandingRequests())
-                  .append(",recved=").append(getPacketsReceived())
-                  .append(",sent=").append(getPacketsSent()).append(")\n");
+                sb.append(" ").append(((SocketChannel) channel).socket()
+                        .getRemoteSocketAddress())
+                        .append("[").append(Integer.toHexString(sk.interestOps()))
+                        .append("](queued=").append(getOutstandingRequests())
+                        .append(",recved=").append(getPacketsReceived())
+                        .append(",sent=").append(getPacketsSent()).append(")\n");
             }
             return sb.toString();
         }
     }
 
-    private CnxnStats stats=new CnxnStats();
+    private CnxnStats stats = new CnxnStats();
+
+    @Override
     public Stats getStats() {
         return stats;
     }
