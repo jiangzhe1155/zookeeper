@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,10 +55,9 @@ public class GenerateLoad {
 
     static ServerSocket ss;
 
-    static Set<SlaveThread> slaves = Collections
-            .synchronizedSet(new HashSet<SlaveThread>());
+    static Set<SlaveThread> slaves = Collections.synchronizedSet(new HashSet<>());
 
-    static Map<Long, Long> totalByTime = new HashMap<Long, Long>();
+    static Map<Long, Long> totalByTime = new HashMap<>();
 
     static long currentInterval;
 
@@ -66,6 +65,7 @@ public class GenerateLoad {
 
     static PrintStream sf;
     static PrintStream tf;
+
     static {
         try {
             tf = new PrintStream(new FileOutputStream("trace"));
@@ -122,7 +122,7 @@ public class GenerateLoad {
                     int count = Integer.parseInt(timePercentCount[2]);
                     int errs = Integer.parseInt(timePercentCount[3]);
                     if (errs > 0) {
-                        System.out.println(s+" Got an error! " + errs);
+                        System.out.println(s + " Got an error! " + errs);
                     }
                     add(time, count, s);
                 }
@@ -167,7 +167,7 @@ public class GenerateLoad {
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
-                for (Iterator<SlaveThread> it = slaves.iterator(); it.hasNext();) {
+                for (Iterator<SlaveThread> it = slaves.iterator(); it.hasNext(); ) {
                     SlaveThread st = it.next();
                     it.remove();
                     st.close();
@@ -186,7 +186,7 @@ public class GenerateLoad {
             try {
                 currentInterval = System.currentTimeMillis() / INTERVAL;
                 // Give things time to report;
-                Thread.sleep(INTERVAL*2);
+                Thread.sleep(INTERVAL * 2);
                 long min = 99999;
                 long max = 0;
                 long total = 0;
@@ -196,8 +196,8 @@ public class GenerateLoad {
                     long lastInterval = currentInterval;
                     currentInterval += 1;
                     long count = remove(lastInterval);
-                    count=count*1000/INTERVAL; // Multiply by 1000 to get reqs/sec
-                    if (lastChange != 0 && (lastChange + INTERVAL*4 + 5000)< now) {
+                    count = count * 1000 / INTERVAL; // Multiply by 1000 to get reqs/sec
+                    if (lastChange != 0 && (lastChange + INTERVAL * 4 + 5000) < now) {
                         // We only want to print anything if things have had a
                         // chance to change
 
@@ -212,8 +212,8 @@ public class GenerateLoad {
                         Calendar calendar = Calendar.getInstance();
                         calendar.setTimeInMillis(lastInterval * INTERVAL);
                         String report = lastInterval + " " + calendar.get(Calendar.HOUR_OF_DAY)
-                                                           + ":" + calendar.get(Calendar.MINUTE)
-                                                           + ":" + calendar.get(Calendar.SECOND)
+                                + ":" + calendar.get(Calendar.MINUTE)
+                                + ":" + calendar.get(Calendar.SECOND)
                                 + " "
                                 + percentage
                                 + "% "
@@ -221,7 +221,7 @@ public class GenerateLoad {
                                 + " "
                                 + min
                                 + " "
-                                + ((double)total / (double)number) + " " + max;
+                                + ((double) total / (double) number) + " " + max;
                         System.err.println(report);
                         if (sf != null) {
                             sf.println(report);
@@ -259,23 +259,23 @@ public class GenerateLoad {
 
     static String host;
 
-        static Socket s;
+    static Socket s;
 
-        static int errors;
+    static int errors;
 
-        static final Object statSync = new Object();
+    static final Object statSync = new Object();
 
-        static int finished;
+    static int finished;
 
-        static int reads;
+    static int reads;
 
-        static int writes;
+    static int writes;
 
-        static int rlatency;
+    static int rlatency;
 
-        static int wlatency;
+    static int wlatency;
 
-        static int outstanding;
+    static int outstanding;
 
     static class ZooKeeperThread extends Thread implements Watcher, DataCallback,
             StatCallback {
@@ -311,13 +311,13 @@ public class GenerateLoad {
             try {
                 byte bytes[] = new byte[1024];
                 zk = new ZooKeeper(host, 60000, this);
-                for(int i = 0; i < 300; i++) {
+                for (int i = 0; i < 300; i++) {
                     try {
                         Thread.sleep(100);
                         path = zk.create("/client", new byte[16], Ids.OPEN_ACL_UNSAFE,
                                 CreateMode.EPHEMERAL_SEQUENTIAL);
                         break;
-                    } catch(KeeperException e) {
+                    } catch (KeeperException e) {
                         LOG.error("keeper exception thrown", e);
                     }
                 }
@@ -344,7 +344,7 @@ public class GenerateLoad {
 
         public void process(WatchedEvent event) {
             System.err.println(event);
-            synchronized(this) {
+            synchronized (this) {
                 try {
                     wait(200);
                 } catch (InterruptedException e) {
@@ -362,32 +362,32 @@ public class GenerateLoad {
         }
 
         public void processResult(int rc, String path, Object ctx, byte[] data,
-                Stat stat) {
+                                  Stat stat) {
             decOutstanding();
-            synchronized(statSync) {
-            if (rc != 0) {
-                System.err.println("Got rc = " + rc);
-                errors++;
-            } else {
-                finished++;
-                rlatency += System.currentTimeMillis() - (Long)ctx;
-                reads++;
-            }
+            synchronized (statSync) {
+                if (rc != 0) {
+                    System.err.println("Got rc = " + rc);
+                    errors++;
+                } else {
+                    finished++;
+                    rlatency += System.currentTimeMillis() - (Long) ctx;
+                    reads++;
+                }
             }
 
         }
 
         public void processResult(int rc, String path, Object ctx, Stat stat) {
             decOutstanding();
-            synchronized(statSync) {
-            if (rc != 0) {
-                System.err.println("Got rc = " + rc);
-                errors++;
-            } else {
-                finished++;
-                wlatency += System.currentTimeMillis() - (Long)ctx;
-                writes++;
-            }
+            synchronized (statSync) {
+                if (rc != 0) {
+                    System.err.println("Got rc = " + rc);
+                    errors++;
+                } else {
+                    finished++;
+                    wlatency += System.currentTimeMillis() - (Long) ctx;
+                    writes++;
+                }
             }
         }
     }
@@ -397,25 +397,28 @@ public class GenerateLoad {
             setDaemon(true);
             start();
         }
+
         public void run() {
             try {
                 OutputStream os = s.getOutputStream();
                 finished = 0;
                 errors = 0;
-                while(true) {
+                while (true) {
                     Thread.sleep(300);
                     if (percentage == -1 || (finished == 0 && errors == 0)) {
                         continue;
                     }
-                    String report = System.currentTimeMillis() + " " + percentage + " " + finished + " " + errors + " " + outstanding + "\n";
-                    String subreport = reads + " " + (((double)rlatency)/reads) + " " + writes + " " + (((double)wlatency/writes));
-                    synchronized(statSync) {
-                    finished = 0;
-                    errors = 0;
-                    reads = 0;
-                    writes = 0;
-                    rlatency = 0;
-                    wlatency = 0;
+                    String report = System.currentTimeMillis() + " " + percentage + " " + finished + " " + errors +
+                            " " + outstanding + "\n";
+                    String subreport =
+                            reads + " " + (((double) rlatency) / reads) + " " + writes + " " + (((double) wlatency / writes));
+                    synchronized (statSync) {
+                        finished = 0;
+                        errors = 0;
+                        reads = 0;
+                        writes = 0;
+                        rlatency = 0;
+                        wlatency = 0;
                     }
                     os.write(report.getBytes());
                     System.out.println("Reporting " + report + "+" + subreport);
@@ -451,7 +454,7 @@ public class GenerateLoad {
                             sendChange(number);
                         } else if (cmdNumber[0].equals("sleep") && cmdNumber.length > 1) {
                             int number = Integer.parseInt(cmdNumber[1]);
-                            Thread.sleep(number*1000);
+                            Thread.sleep(number * 1000);
                         } else if (cmdNumber[0].equals("save") && cmdNumber.length > 1) {
                             sf = new PrintStream(cmdNumber[1]);
                         } else {
@@ -481,7 +484,7 @@ public class GenerateLoad {
                 new SenderThread();
                 BufferedReader is = new BufferedReader(new InputStreamReader(s.getInputStream()));
                 String line;
-                while((line = is.readLine()) != null) {
+                while ((line = is.readLine()) != null) {
                     percentage = Integer.parseInt(line);
                 }
             } catch (Exception e) {

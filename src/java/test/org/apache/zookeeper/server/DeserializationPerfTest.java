@@ -30,7 +30,7 @@ import org.apache.zookeeper.KeeperException;
 
 public class DeserializationPerfTest extends TestCase {
     private static void deserializeTree(int depth, int width, int len)
-            throws InterruptedException, IOException, KeeperException.NodeExistsException, KeeperException.NoNodeException {
+            throws IOException, KeeperException.NodeExistsException, KeeperException.NoNodeException {
         BinaryInputArchive ia;
         int count;
         {

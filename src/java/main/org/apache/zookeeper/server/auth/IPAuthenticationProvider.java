@@ -24,10 +24,12 @@ import org.apache.zookeeper.KeeperException;
 
 public class IPAuthenticationProvider implements AuthenticationProvider {
 
+    @Override
     public String getScheme() {
         return "ip";
     }
 
+    @Override
     public int handleAuthentication(ServerCnxn cnxn, byte[] authData) {
         String id = cnxn.getRemoteAddress().getAddress().getHostAddress();
         cnxn.getAuthInfo().add(new Id(getScheme(), id));
@@ -105,10 +107,12 @@ public class IPAuthenticationProvider implements AuthenticationProvider {
         return true;
     }
 
+    @Override
     public boolean isAuthenticated() {
         return false;
     }
 
+    @Override
     public boolean isValid(String id) {
         return addr2Bytes(id) != null;
     }

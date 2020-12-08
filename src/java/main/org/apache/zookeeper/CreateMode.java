@@ -38,6 +38,7 @@ public enum CreateMode {
     PERSISTENT_SEQUENTIAL(2, false, true),
     /**
      * The znode will be deleted upon the client's disconnect.
+     * 临时的节点
      */
     EPHEMERAL(1, true, false),
     /**

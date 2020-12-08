@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ import org.apache.zookeeper.server.quorum.Vote;
 import org.apache.zookeeper.server.quorum.QuorumPeer.QuorumServer;
 import org.apache.zookeeper.server.quorum.QuorumPeer.ServerState;
 
-public class LeaderElection implements Election  {
+public class LeaderElection implements Election {
     private static final Logger LOG = Logger.getLogger(LeaderElection.class);
 
     QuorumPeer self;
@@ -64,7 +64,7 @@ public class LeaderElection implements Election  {
         Collection<Vote> votesCast = votes.values();
         // First make the views consistent. Sometimes peers will have
         // different zxids for a server depending on timing.
-        for (Iterator<Vote> i = votesCast.iterator(); i.hasNext();) {
+        for (Iterator<Vote> i = votesCast.iterator(); i.hasNext(); ) {
             Vote v = i.next();
             if (!heardFrom.contains(v.id)) {
                 // Discard votes for machines that we didn't hear from
@@ -79,8 +79,8 @@ public class LeaderElection implements Election  {
                 }
             }
         }
-        
-        HashMap<Vote, Integer> countTable = new HashMap<Vote, Integer>();
+
+        HashMap<Vote, Integer> countTable = new HashMap<>();
         // Now do the tally
         for (Vote v : votesCast) {
             Integer count = countTable.get(v);
@@ -108,12 +108,13 @@ public class LeaderElection implements Election  {
         return result;
     }
 
+    @Override
     public Vote lookForLeader() throws InterruptedException {
         self.setCurrentVote(new Vote(self.getId(), self.getLastLoggedZxid()));
         // We are going to look for a leader by casting a vote for ourself
-        byte requestBytes[] = new byte[4];
+        byte[] requestBytes = new byte[4];
         ByteBuffer requestBuffer = ByteBuffer.wrap(requestBytes);
-        byte responseBytes[] = new byte[28];
+        byte[] responseBytes = new byte[28];
         ByteBuffer responseBuffer = ByteBuffer.wrap(responseBytes);
         /* The current vote for the leader. Initially me! */
         DatagramSocket s = null;
@@ -124,19 +125,16 @@ public class LeaderElection implements Election  {
             e1.printStackTrace();
             System.exit(4);
         }
-        DatagramPacket requestPacket = new DatagramPacket(requestBytes,
-                requestBytes.length);
-        DatagramPacket responsePacket = new DatagramPacket(responseBytes,
-                responseBytes.length);
-        HashMap<InetSocketAddress, Vote> votes = new HashMap<InetSocketAddress, Vote>(
-                self.quorumPeers.size());
+        DatagramPacket requestPacket = new DatagramPacket(requestBytes, requestBytes.length);
+        DatagramPacket responsePacket = new DatagramPacket(responseBytes, responseBytes.length);
+        HashMap<InetSocketAddress, Vote> votes = new HashMap<>(self.quorumPeers.size());
         int xid = new Random().nextInt();
         while (self.running) {
             votes.clear();
             requestBuffer.clear();
             requestBuffer.putInt(xid);
             requestPacket.setLength(4);
-            HashSet<Long> heardFrom = new HashSet<Long>();
+            HashSet<Long> heardFrom = new HashSet<>();
             for (QuorumServer server : self.quorumPeers.values()) {
                 requestPacket.setSocketAddress(server.addr);
                 LOG.warn("Server address: " + server.addr);
@@ -159,11 +157,9 @@ public class LeaderElection implements Election  {
                     long peerId = responseBuffer.getLong();
                     heardFrom.add(peerId);
                     //if(server.id != peerId){
-                        Vote vote = new Vote(responseBuffer.getLong(),
-                            responseBuffer.getLong());
-                        InetSocketAddress addr = (InetSocketAddress) responsePacket
-                            .getSocketAddress();
-                        votes.put(addr, vote);
+                    Vote vote = new Vote(responseBuffer.getLong(), responseBuffer.getLong());
+                    InetSocketAddress addr = (InetSocketAddress) responsePacket.getSocketAddress();
+                    votes.put(addr, vote);
                     //}
                 } catch (IOException e) {
                     LOG.error("Error in looking for leader", e);
@@ -179,8 +175,8 @@ public class LeaderElection implements Election  {
                     self.setCurrentVote(result.winner);
                     s.close();
                     Vote current = self.getCurrentVote();
-                    self.setPeerState((current.id == self.getId()) 
-                            ? ServerState.LEADING: ServerState.FOLLOWING);
+                    self.setPeerState((current.id == self.getId())
+                            ? ServerState.LEADING : ServerState.FOLLOWING);
                     if (self.getPeerState() == ServerState.FOLLOWING) {
                         Thread.sleep(100);
                     }

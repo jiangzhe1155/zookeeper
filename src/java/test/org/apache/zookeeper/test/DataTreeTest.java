@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,29 +34,30 @@ public class DataTreeTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         LOG.info("STARTING " + getName());
-        dt=new DataTree();
+        dt = new DataTree();
     }
 
     @Override
     public void tearDown() throws Exception {
-        dt=null;
+        dt = null;
         LOG.info("FINISHED " + getName());
     }
 
     public void testRootWatchTriggered() throws Exception {
-        class MyWatcher implements Watcher{
-            boolean fired=false;
+        class MyWatcher implements Watcher {
+            boolean fired = false;
+
             public void process(WatchedEvent event) {
-                if(event.getPath().equals("/"))
-                    fired=true;
+                if (event.getPath().equals("/"))
+                    fired = true;
             }
         }
-        MyWatcher watcher=new MyWatcher();
+        MyWatcher watcher = new MyWatcher();
         // set a watch on the root node
         dt.getChildren("/", new Stat(), watcher);
         // add a new node, should trigger a watch
         dt.createNode("/xyz", new byte[0], null, 0, 1, 1);
-        assertFalse("Root node watch not triggered",!watcher.fired);
+        assertFalse("Root node watch not triggered", !watcher.fired);
     }
 
 }

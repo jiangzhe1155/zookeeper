@@ -35,6 +35,7 @@ class AckRequestProcessor implements RequestProcessor {
     /**
      * Forward the request as an ACK to the leader
      */
+    @Override
     public void processRequest(Request request) {
         leader.processAck(request.zxid, null);
     }

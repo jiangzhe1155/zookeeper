@@ -63,6 +63,7 @@ public class FollowerSessionTracker implements SessionTracker {
         touchTable.put(sessionId, sessionTimeout);
     }
 
+    @Override
     synchronized public boolean touchSession(long sessionId, int sessionTimeout) {
         touchTable.put(sessionId, sessionTimeout);
         return true;

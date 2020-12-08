@@ -79,14 +79,14 @@ public class FLETest extends TestCase {
     Random rand = new Random();
     
     @Override
-    public void setUp() throws Exception {
+    public void setUp() {
         count = 7;
         baseport= 33003;
         baseLEport = 43003;
         
-        peers = new HashMap<Long,QuorumServer>(count);
-        threads = new ArrayList<LEThread>(count);
-        voteMap = new HashMap<Integer, HashSet<TestVote> >();
+        peers = new HashMap<>(count);
+        threads = new ArrayList<>(count);
+        voteMap = new HashMap<>();
         votes = new Vote[count];
         tmpdir = new File[count];
         port = new int[count];

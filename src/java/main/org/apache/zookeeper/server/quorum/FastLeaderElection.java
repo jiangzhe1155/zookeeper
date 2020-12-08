@@ -504,10 +504,11 @@ public class FastLeaderElection implements Election {
      * changes its state to LOOKING, this method is invoked, and it 
      * sends notifications to al other peers.
      */
+    @Override
     public Vote lookForLeader() throws InterruptedException {
-        HashMap<Long, Vote> recvset = new HashMap<Long, Vote>();
+        HashMap<Long, Vote> recvset = new HashMap<>();
 
-        HashMap<Long, Vote> outofelection = new HashMap<Long, Vote>();
+        HashMap<Long, Vote> outofelection = new HashMap<>();
 
         synchronized(this){
             logicalclock++;

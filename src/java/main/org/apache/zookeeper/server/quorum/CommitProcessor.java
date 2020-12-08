@@ -165,6 +165,7 @@ public class CommitProcessor extends Thread implements RequestProcessor {
         }
     }
 
+    @Override
     synchronized public void processRequest(Request request) {
         // request.addRQRec(">commit");
         if (LOG.isDebugEnabled()) {
@@ -177,6 +178,7 @@ public class CommitProcessor extends Thread implements RequestProcessor {
         }
     }
 
+    @Override
     public void shutdown() {
         synchronized (this) {
             finished = true;

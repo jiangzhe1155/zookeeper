@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,11 +34,11 @@ import org.apache.log4j.Logger;
 public class SyncRequestProcessor extends Thread implements RequestProcessor {
     private static final Logger LOG = Logger.getLogger(SyncRequestProcessor.class);
     private ZooKeeperServer zks;
-    private LinkedBlockingQueue<Request> queuedRequests = new LinkedBlockingQueue<Request>();
+    private LinkedBlockingQueue<Request> queuedRequests = new LinkedBlockingQueue<>();
     private RequestProcessor nextProcessor;
     boolean timeToDie = false;
     Thread snapInProcess = null;
-    
+
     /**
      * Transactions that have been written and are waiting to be flushed to
      * disk. Basically this is the list of SyncItems whose callbacks will be
@@ -55,7 +55,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
     private Request requestOfDeath = Request.requestOfDeath;
 
     public SyncRequestProcessor(ZooKeeperServer zks,
-            RequestProcessor nextProcessor) {
+                                RequestProcessor nextProcessor) {
         super("SyncThread:" + zks.getClientPort());
         this.zks = zks;
         this.nextProcessor = nextProcessor;
@@ -81,29 +81,29 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                 }
                 if (si != null) {
                     zks.getLogWriter().append(si);
-                        logCount++;
-                        if (logCount > snapCount / 2
-                                && r.nextInt(snapCount / 2) == 0) {
-                            // roll the log
-                            zks.getLogWriter().rollLog();
-                            // take a snapshot
-                            if (snapInProcess != null && snapInProcess.isAlive()) {
-                                LOG.warn("Too busy to snap, skipping");
-                            }
-                            else {
-                                snapInProcess = new Thread("Snapshot Thread") {
-                                    public void run() {
-                                     try {
-                                         zks.takeSnapshot();
-                                     } catch(Exception e) {
-                                         LOG.warn("Unexpected exception", e);
-                                     }
+                    logCount++;
+                    if (logCount > snapCount / 2
+                            && r.nextInt(snapCount / 2) == 0) {
+                        // roll the log
+                        zks.getLogWriter().rollLog();
+                        // take a snapshot
+                        if (snapInProcess != null && snapInProcess.isAlive()) {
+                            LOG.warn("Too busy to snap, skipping");
+                        } else {
+                            snapInProcess = new Thread("Snapshot Thread") {
+                                @Override
+                                public void run() {
+                                    try {
+                                        zks.takeSnapshot();
+                                    } catch (Exception e) {
+                                        LOG.warn("Unexpected exception", e);
                                     }
-                                };
-                                snapInProcess.start();
-                            }
-                            logCount = 0;
+                                }
+                            };
+                            snapInProcess.start();
                         }
+                        logCount = 0;
+                    }
                     toFlush.add(si);
                     if (toFlush.size() > 1000) {
                         flush(toFlush);
@@ -111,17 +111,18 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                 }
             }
         } catch (Exception e) {
-            LOG.error("Severe error, exiting",e);
+            LOG.error("Severe error, exiting", e);
             System.exit(11);
         }
         ZooTrace.logTraceMessage(LOG, ZooTrace.getTextTraceLevel(),
-                                     "SyncRequestProcessor exited!");
+                "SyncRequestProcessor exited!");
     }
 
     @SuppressWarnings("unchecked")
     private void flush(LinkedList<Request> toFlush) throws IOException {
-        if (toFlush.size() == 0)
+        if (toFlush.size() == 0) {
             return;
+        }
 
         zks.getLogWriter().commit();
         while (toFlush.size() > 0) {
@@ -130,12 +131,14 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
         }
     }
 
+    @Override
     public void shutdown() {
         timeToDie = true;
         queuedRequests.add(requestOfDeath);
         nextProcessor.shutdown();
     }
 
+    @Override
     public void processRequest(Request request) {
         // request.addRQRec(">sync");
         queuedRequests.add(request);

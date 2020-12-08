@@ -47,7 +47,7 @@ public class OOMTest extends TestCase implements Watcher {
         File tmpDir = ClientBase.createTmpDir();
         // Grab some memory so that it is easier to cause an
         // OOM condition;
-        ArrayList<byte[]> hog = new ArrayList<byte[]>();
+        ArrayList<byte[]> hog = new ArrayList<>();
         while (true) {
             try {
                 hog.add(new byte[1024 * 1024 * 2]);

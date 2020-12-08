@@ -274,6 +274,7 @@ public class Util {
             this.ascending = ascending;
         }
 
+        @Override
         public int compare(File o1, File o2) {
             long z1 = Util.getZxidFromName(o1.getName(), prefix);
             long z2 = Util.getZxidFromName(o2.getName(), prefix);
@@ -296,7 +297,7 @@ public class Util {
     public static List<File> sortDataDir(File[] files, String prefix, boolean ascending)
     {
         if(files==null)
-            return new ArrayList<File>(0);
+            return new ArrayList<>(0);
         List<File> filelist = Arrays.asList(files);
         Collections.sort(filelist, new DataDirFileComparator(prefix, ascending));
         return filelist;

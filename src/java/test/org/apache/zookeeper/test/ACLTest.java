@@ -50,13 +50,13 @@ public class ACLTest extends TestCase implements Watcher {
     private CountDownLatch startSignal;
 
     @Override
-    protected void setUp() throws Exception {
+    protected void setUp() {
         LOG.info("STARTING " + getName());
         ServerStats.registerAsConcrete();
     }
 
     @Override
-    protected void tearDown() throws Exception {
+    protected void tearDown() {
         ServerStats.unregister();
         LOG.info("FINISHED " + getName());
     }
@@ -75,8 +75,7 @@ public class ACLTest extends TestCase implements Watcher {
         NIOServerCnxn.Factory f = new NIOServerCnxn.Factory(PORT);
         f.startup(zks);
         LOG.info("starting up the zookeeper server .. waiting");
-        assertTrue("waiting for server being up",
-                ClientBase.waitForServerUp(HOSTPORT, CONNECTION_TIMEOUT));
+        assertTrue("waiting for server being up", ClientBase.waitForServerUp(HOSTPORT, CONNECTION_TIMEOUT));
         ZooKeeper zk = new ZooKeeper(HOSTPORT, 20000, this);
         String path;
         LOG.info("starting creating acls");
@@ -89,12 +88,12 @@ public class ACLTest extends TestCase implements Watcher {
         for (int j = 100; j < 200; j++) {
             path = "/" + j;
             ACL acl = new ACL();
-            acl.setPerms(0);
+            acl.setPerms(0); //啥权限都没有
             Id id = new Id();
             id.setId(j + "");
             id.setScheme("host");
             acl.setId(id);
-            ArrayList<ACL> list = new ArrayList<ACL>();
+            ArrayList<ACL> list = new ArrayList<>();
             list.add(acl);
             zk.create(path, path.getBytes(), list, CreateMode.PERSISTENT);
         }
@@ -112,11 +111,9 @@ public class ACLTest extends TestCase implements Watcher {
         f.startup(zks);
 
         assertTrue("waiting for server up",
-                ClientBase.waitForServerUp(HOSTPORT,
-                        CONNECTION_TIMEOUT));
+                ClientBase.waitForServerUp(HOSTPORT, CONNECTION_TIMEOUT));
 
-        startSignal.await(CONNECTION_TIMEOUT,
-                TimeUnit.MILLISECONDS);
+        startSignal.await(CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS);
         assertTrue("count == 0", startSignal.getCount() == 0);
 
         assertTrue("acl map ", (101 == zks.dataTree.longKeyMap.size()));

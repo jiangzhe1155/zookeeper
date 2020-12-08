@@ -91,6 +91,7 @@ public class FollowerRequestProcessor extends Thread implements
                                  "FollowerRequestProcessor exited loop!");
     }
 
+    @Override
     public void processRequest(Request request) {
         if (!finished) {
             queuedRequests.add(request);

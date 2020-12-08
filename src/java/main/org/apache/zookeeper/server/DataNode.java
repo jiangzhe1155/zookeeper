@@ -84,7 +84,7 @@ public class DataNode implements Record {
 
     public StatPersisted stat;
 
-    HashSet<String> children = new HashSet<String>();
+    HashSet<String> children = new HashSet<>();
 
     public void copyStat(Stat to) {
         to.setAversion(stat.getAversion());

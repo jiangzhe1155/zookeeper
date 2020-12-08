@@ -769,6 +769,7 @@ public class AuthFastLeaderElection implements Election {
 
     }
 
+    @Override
     public Vote lookForLeader() throws InterruptedException {
         HashMap<InetSocketAddress, Vote> recvset = 
             new HashMap<InetSocketAddress, Vote>();

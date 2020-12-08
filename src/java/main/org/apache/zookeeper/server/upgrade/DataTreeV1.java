@@ -206,11 +206,7 @@ public class DataTreeV1 {
             parent.children.add(childName);
             nodes.put(path, child);
             if (ephemeralOwner != 0) {
-                HashSet<String> list = ephemerals.get(ephemeralOwner);
-                if (list == null) {
-                    list = new HashSet<String>();
-                    ephemerals.put(ephemeralOwner, list);
-                }
+                HashSet<String> list = ephemerals.computeIfAbsent(ephemeralOwner, k -> new HashSet<String>());
                 synchronized(list) {
                     list.add(path);
                 }

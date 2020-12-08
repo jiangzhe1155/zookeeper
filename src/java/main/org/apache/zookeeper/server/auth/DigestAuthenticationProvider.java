@@ -90,6 +90,7 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
         return parts[0] + ":" + base64Encode(digest);
     }
 
+    @Override
     public int handleAuthentication(ServerCnxn cnxn, byte[] authData) {
         String id = new String(authData);
         try {
@@ -105,10 +106,12 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
         return KeeperException.Code.AuthFailed;
     }
 
+    @Override
     public boolean isAuthenticated() {
         return true;
     }
 
+    @Override
     public boolean isValid(String id) {
         String parts[] = id.split(":");
         return parts.length == 2;

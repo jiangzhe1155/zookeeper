@@ -55,6 +55,8 @@ import org.apache.zookeeper.txn.TxnHeader;
  * This class implements a simple standalone ZooKeeperServer. It sets up the
  * following chain of RequestProcessors to process requests:
  * PrepRequestProcessor -> SyncRequestProcessor -> FinalRequestProcessor
+ * <p>
+ * 单例模式下Zookeeper服务端
  */
 public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     private static final Logger LOG = Logger.getLogger(ZooKeeperServer.class);
@@ -335,15 +337,18 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     }
 
     protected void setupRequestProcessors() {
+        // 终止请求
         RequestProcessor finalProcessor = new FinalRequestProcessor(this);
+
+        //请求处理线程
         RequestProcessor syncProcessor = new SyncRequestProcessor(this,
                 finalProcessor);
+
         firstProcessor = new PrepRequestProcessor(this, syncProcessor);
     }
 
     protected void createSessionTracker() {
-        sessionTracker = new SessionTrackerImpl(this, sessionsWithTimeouts,
-                tickTime, 1);
+        sessionTracker = new SessionTrackerImpl(this, sessionsWithTimeouts, tickTime, 1);
     }
 
     public boolean isRunning() {
@@ -480,6 +485,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
     public void submitRequest(Request si) {
         if (firstProcessor == null) {
+            //如果前置处理还没加载完成 等待一会
             synchronized (this) {
                 try {
                     while (!running) {
@@ -499,6 +505,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             if (validpacket) {
                 firstProcessor.processRequest(si);
                 if (si.cnxn != null) {
+                    // 处理请求数 + 1
                     incInProcess();
                 }
             } else {

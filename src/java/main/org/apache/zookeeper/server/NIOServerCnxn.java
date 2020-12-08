@@ -62,7 +62,7 @@ import org.apache.zookeeper.server.auth.ProviderRegistry;
  * This class handles communication with clients using NIO. There is one per
  * client, but only one thread doing the communication.
  */
-// 解决
+// 网络io管理器
 public class NIOServerCnxn implements Watcher, ServerCnxn {
     private static final Logger LOG = Logger.getLogger(NIOServerCnxn.class);
 
@@ -81,7 +81,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
          */
         ByteBuffer directBuffer = ByteBuffer.allocateDirect(64 * 1024);
 
-        HashSet<NIOServerCnxn> cnxns = new HashSet<>();
+        HashSet<NIOServerCnxn> cnxns = new HashSet<>(); // 这里实际上就是一个线程管理每一个客户端的请求
 
         int outstandingLimit = 1;
 
@@ -91,7 +91,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
             this.ss = ServerSocketChannel.open();
             ss.socket().bind(new InetSocketAddress(port)); //绑定到一个端口上
             ss.configureBlocking(false);//非阻塞
-            ss.register(selector, SelectionKey.OP_ACCEPT);//注册感兴趣的事件
+            ss.register(selector, SelectionKey.OP_ACCEPT);//这里只注册了连接事件
             start();
         }
 
@@ -137,10 +137,10 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
         @Override
         public void run() {
             while (!ss.socket().isClosed()) {
+                //当服务端socket还没有关闭时
                 try {
                     selector.select(1000);
                     Set<SelectionKey> selected;
-                    System.out.println("Factory实例" + this.getName());
                     synchronized (this) {
                         //为什么要加 synchronized
                         selected = selector.selectedKeys();
@@ -287,6 +287,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                 return;
             }
             if (k.isReadable()) {
+                // 可读
                 int rc = sock.read(incomingBuffer);
                 if (rc < 0) {
                     throw new IOException("Read error");
@@ -421,6 +422,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
         // to the start of the txn
         incomingBuffer = incomingBuffer.slice();
         if (h.getType() == OpCode.auth) {
+            //校验权限
             AuthPacket authPacket = new AuthPacket();
             ZooKeeperServer.byteBuffer2Record(incomingBuffer, authPacket);
             String scheme = authPacket.getScheme();
@@ -773,6 +775,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
      *
      * @see org.apache.zookeeper.server.ServerCnxnIface#process(org.apache.zookeeper.proto.WatcherEvent)
      */
+    @Override
     synchronized public void process(WatchedEvent event) {
         ReplyHeader h = new ReplyHeader(-1, -1L, 0);
         ZooTrace.logTraceMessage(LOG, ZooTrace.EVENT_DELIVERY_TRACE_MASK,

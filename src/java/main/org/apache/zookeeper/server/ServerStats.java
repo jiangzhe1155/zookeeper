@@ -18,7 +18,7 @@
 
 package org.apache.zookeeper.server;
 
-
+// 服务状态管理
 public class ServerStats {
     private static ServerStats instance = null;
     private long packetsSent;
@@ -29,13 +29,13 @@ public class ServerStats {
     private long count = 0;
 
     public interface Provider {
-        public long getOutstandingRequests();
+        long getOutstandingRequests();
 
-        public long getLastProcessedZxid();
+        long getLastProcessedZxid();
     }
 
     private Provider provider = null;
-    private Object mutex = new Object();
+    private Object mutex = new Object();//对象锁
 
     static public ServerStats getInstance() {
         return instance;
@@ -64,8 +64,9 @@ public class ServerStats {
     }
 
     synchronized public long getAvgLatency() {
-        if (count != 0)
+        if (count != 0) {
             return totalLatency / count;
+        }
         return 0;
     }
 

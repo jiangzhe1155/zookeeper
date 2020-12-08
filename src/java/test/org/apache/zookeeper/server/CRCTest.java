@@ -97,11 +97,15 @@ public class CRCTest extends TestCase implements Watcher {
         LOG.info("starting up the zookeeper server .. waiting");
         assertTrue("waiting for server being up",
                 ClientBase.waitForServerUp(HOSTPORT, CONNECTION_TIMEOUT));
+
+        // 当20秒连接不上就自动关闭
         ZooKeeper zk = new ZooKeeper(HOSTPORT, 20000, this);
+
         for (int i = 0; i < 2000; i++) {
             zk.create("/crctest- " + i, ("/crctest- " + i).getBytes(),
                     Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         }
+
         f.shutdown();
         assertTrue("waiting for server down",
                 ClientBase.waitForServerDown(HOSTPORT,
@@ -111,8 +115,8 @@ public class CRCTest extends TestCase implements Watcher {
         File[] list = versionDir.listFiles();
         //there should be only two files 
         // one the snapshot and the other logFile
-        File snapFile = null;
-        File logFile = null;
+        File snapFile;
+        File logFile;
         for (File file : list) {
             LOG.info("file is " + file);
             if (file.getName().startsWith("log")) {

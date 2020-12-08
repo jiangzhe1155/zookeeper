@@ -24,16 +24,19 @@ import org.apache.zookeeper.KeeperException;
 
 public class HostAuthenticationProvider implements AuthenticationProvider {
 
+    @Override
     public String getScheme() {
         return "host";
     }
 
+    @Override
     public int handleAuthentication(ServerCnxn cnxn, byte[] authData) {
         String id = cnxn.getRemoteAddress().getAddress().getCanonicalHostName();
         cnxn.getAuthInfo().add(new Id(getScheme(), id));
         return KeeperException.Code.Ok;
     }
 
+    @Override
     public boolean matches(String id, String aclExpr) {
         // We just do suffix matching
         String idParts[] = id.split("\\.");
@@ -50,10 +53,12 @@ public class HostAuthenticationProvider implements AuthenticationProvider {
         return true;
     }
 
+    @Override
     public boolean isAuthenticated() {
         return false;
     }
 
+    @Override
     public boolean isValid(String id) {
         String parts[] = id.split("\\.");
         for (String part : parts) {

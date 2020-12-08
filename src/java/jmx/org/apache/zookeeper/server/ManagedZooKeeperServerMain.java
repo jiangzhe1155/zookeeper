@@ -70,9 +70,11 @@ public class ManagedZooKeeperServerMain extends ZooKeeperServerMain {
         }
         ZooKeeperObserverManager.setAsConcrete();
         runStandalone(new ZooKeeperServer.Factory() {
+            @Override
             public NIOServerCnxn.Factory createConnectionFactory()throws IOException {
                 return new ObservableNIOServerCnxn.Factory(getClientPort());
             }
+            @Override
             public ZooKeeperServer createServer() throws IOException {
                 ManagedZooKeeperServer zks = new ManagedZooKeeperServer(
                         new FileTxnSnapLog(new File(ServerConfig.getDataDir()),

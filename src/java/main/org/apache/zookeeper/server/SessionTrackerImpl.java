@@ -38,9 +38,9 @@ import org.apache.zookeeper.KeeperException;
 public class SessionTrackerImpl extends Thread implements SessionTracker {
     private static final Logger LOG = Logger.getLogger(SessionTrackerImpl.class);
 
-    HashMap<Long, Session> sessionsById = new HashMap<Long, Session>();
+    HashMap<Long, Session> sessionsById = new HashMap<>();
 
-    HashMap<Long, SessionSet> sessionSets = new HashMap<Long, SessionSet>();
+    HashMap<Long, SessionSet> sessionSets = new HashMap<>();
 
     ConcurrentHashMap<Long, Integer> sessionsWithTimeout;
     long nextSessionId = 0;
@@ -143,10 +143,9 @@ public class SessionTrackerImpl extends Thread implements SessionTracker {
                                  "SessionTrackerImpl exited loop!");
     }
 
+    @Override
     synchronized public boolean touchSession(long sessionId, int timeout) {
-        ZooTrace.logTraceMessage(LOG,
-                                 ZooTrace.CLIENT_PING_TRACE_MASK,
-                                 "SessionTrackerImpl --- Touch session: 0x"
+        ZooTrace.logTraceMessage(LOG, ZooTrace.CLIENT_PING_TRACE_MASK, "SessionTrackerImpl --- Touch session: 0x"
                 + Long.toHexString(sessionId) + " with timeout " + timeout);
         Session s = sessionsById.get(sessionId);
         if (s == null) {

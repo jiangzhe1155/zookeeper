@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,29 +37,24 @@ import org.apache.zookeeper.proto.WatcherEvent;
 public class WatchManager {
     private static final Logger LOG = Logger.getLogger(WatchManager.class);
 
-    private HashMap<String, HashSet<Watcher>> watchTable = 
-        new HashMap<String, HashSet<Watcher>>();
+    //这个路径对应的 watchs
+    private HashMap<String, HashSet<Watcher>> watchTable =
+            new HashMap<>();
 
-    private HashMap<Watcher, HashSet<String>> watch2Paths = 
-        new HashMap<Watcher, HashSet<String>>();
+    private HashMap<Watcher, HashSet<String>> watch2Paths =
+            new HashMap<>();
 
-    public synchronized int size(){
+    public synchronized int size() {
         return watchTable.size();
     }
 
+    // 如果缺失就替换
     public synchronized void addWatch(String path, Watcher watcher) {
-        HashSet<Watcher> list = watchTable.get(path);
-        if (list == null) {
-            list = new HashSet<Watcher>();
-            watchTable.put(path, list);
-        }
+        HashSet<Watcher> list = watchTable.computeIfAbsent(path, k -> new HashSet<>());
         list.add(watcher);
 
-        HashSet<String> paths = watch2Paths.get(watcher);
-        if (paths == null) {
-            paths = new HashSet<String>();
-            watch2Paths.put(watcher, paths);
-        }
+        //通过 watch找到path
+        HashSet<String> paths = watch2Paths.computeIfAbsent(watcher, k -> new HashSet<>());
         paths.add(path);
     }
 
@@ -82,12 +77,14 @@ public class WatchManager {
     public Set<Watcher> triggerWatch(String path, EventType type) {
         return triggerWatch(path, type, null);
     }
-    
+
+    // 同步触发回调
     public Set<Watcher> triggerWatch(String path, EventType type, Set<Watcher> supress) {
-        WatchedEvent e = new WatchedEvent(type,
-                KeeperState.SyncConnected, path);
+        // 创建一个回调事件
+        WatchedEvent e = new WatchedEvent(type, KeeperState.SyncConnected, path);
         HashSet<Watcher> watchers;
         synchronized (this) {
+            // 未什么要删除呢
             watchers = watchTable.remove(path);
             if (watchers == null || watchers.isEmpty()) {
                 ZooTrace.logTraceMessage(LOG,
@@ -104,6 +101,7 @@ public class WatchManager {
         }
         for (Watcher w : watchers) {
             if (supress != null && supress.contains(w)) {
+                // 忽略的 watchers
                 continue;
             }
             w.process(e);
